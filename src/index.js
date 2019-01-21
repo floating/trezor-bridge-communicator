@@ -40,12 +40,15 @@ const acquire = async path => new Promise(((resolve, reject) => {
     });
 }));
 
+const getSession = async (devices) => {
+    if (!devices[0].session) {
+        await acquire(devices[0].path);
+    }
+    return devices[0].session;
+};
+
 (async () => {
     await isBridgeConnected();
     const devices = JSON.parse(await getDevices());
-    const { path } = devices[0];
-    const acquiredDevice = await acquire(path);
-    const { sesstion } = acquiredDevice;
-
-    console.log('acquiredDevice', acquiredDevice);
+    const session = await getSession(devices);
 })();
