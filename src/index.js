@@ -6,6 +6,10 @@ const TYPES = {
     LOAD_DEVICE: 13,
 };
 
+const ACTIONS = {
+    CONFIRM: '0064000000020801',
+};
+
 const isBridgeConnected = async () => new Promise(((resolve, reject) => {
     request.get('http://127.0.0.1:21325/status/', (error, response) => {
         if (error || response.statusCode !== 200) {
@@ -66,6 +70,21 @@ const compose = (buf, type) => {
     return Buffer.concat([header, buf]);
 };
 
+const confirm = session => new Promise(((resolve, reject) => {
+    request.post(`http://127.0.0.1:21325/call/${session}`, {
+        body: ACTIONS.CONFIRM,
+        headers: {
+            Origin: 'https://wallet.trezor.io',
+        },
+    }, (error, res) => {
+        if (error) {
+            reject(error);
+        } else {
+            resolve(res.toJSON().body);
+        }
+    });
+}));
+
 const initDevice = async session => new Promise(((resolve, reject) => {
     const root = protobufjs.Root.fromJSON(loadDevice);
     const LoadDeviceMessage = root.lookupType('LoadDevice');
@@ -82,10 +101,12 @@ const initDevice = async session => new Promise(((resolve, reject) => {
         if (error) {
             reject(error);
         } else {
+            confirm(session);
             resolve(res.toJSON().body);
         }
     });
 }));
+
 
 (async () => {
     await isBridgeConnected();
