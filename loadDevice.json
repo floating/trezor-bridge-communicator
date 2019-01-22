@@ -1,0 +1,52 @@
+{
+    "nested": {
+        "LoadDevice": {
+            "fields": {
+                "mnemonic": {
+                    "rule": "optional",
+                    "options": {},
+                    "type": "string",
+                    "id": 1
+                },
+                "pin": {
+                    "rule": "optional",
+                    "options": {},
+                    "type": "string",
+                    "id": 3
+                },
+                "passphrase_protection": {
+                    "rule": "optional",
+                    "options": {},
+                    "type": "bool",
+                    "id": 4
+                },
+                "language": {
+                    "rule": "optional",
+                    "options": {
+                        "default": "english"
+                    },
+                    "type": "string",
+                    "id": 5
+                },
+                "label": {
+                    "rule": "optional",
+                    "options": {},
+                    "type": "string",
+                    "id": 6
+                },
+                "skip_checksum": {
+                    "rule": "optional",
+                    "options": {},
+                    "type": "bool",
+                    "id": 7
+                },
+                "u2f_counter": {
+                    "rule": "optional",
+                    "options": {},
+                    "type": "uint32",
+                    "id": 8
+                }
+            }
+        }
+    }
+}
