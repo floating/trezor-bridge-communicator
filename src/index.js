@@ -7,6 +7,7 @@ const TYPES = {
 };
 
 const ACTIONS = {
+    BUTTON_ACK: '001b00000000',
     CONFIRM: '0064000000020801',
 };
 
@@ -44,6 +45,21 @@ const acquire = async path => new Promise(((resolve, reject) => {
         if (error) {
             reject(error);
         } else {
+            console.log('aaa');
+            resolve(res.toJSON().body);
+        }
+    });
+}));
+
+const release = async session => new Promise(((resolve, reject) => {
+    request.post(`http://127.0.0.1:21325/release/${session}`, {
+        headers: {
+            Origin: 'https://wallet.trezor.io',
+        },
+    }, (error, res) => {
+        if (error) {
+            reject(error);
+        } else {
             resolve(res.toJSON().body);
         }
     });
@@ -55,10 +71,12 @@ const getSession = async (devices) => {
         throw Error('No connected devices');
     }
     if (!devices[0].session) {
+        console.log('acquirung');
         result = await acquire(devices[0].path).session;
     } else {
         result = devices[0].session;
     }
+    console.log('result', result);
     return result;
 };
 
@@ -70,9 +88,9 @@ const compose = (buf, type) => {
     return Buffer.concat([header, buf]);
 };
 
-const confirm = session => new Promise(((resolve, reject) => {
+const callHex = async (session, hex) => new Promise(((resolve, reject) => {
     request.post(`http://127.0.0.1:21325/call/${session}`, {
-        body: ACTIONS.CONFIRM,
+        body: hex,
         headers: {
             Origin: 'https://wallet.trezor.io',
         },
@@ -97,20 +115,21 @@ const initDevice = async session => new Promise(((resolve, reject) => {
         headers: {
             Origin: 'https://wallet.trezor.io',
         },
-    }, (error, res) => {
+    }, async (error, res) => {
         if (error) {
             reject(error);
         } else {
-            confirm(session);
+            await callHex(session, ACTIONS.BUTTON_ACK);
+            await callHex(session, ACTIONS.BUTTON_YES);
             resolve(res.toJSON().body);
         }
     });
 }));
-
 
 (async () => {
     await isBridgeConnected();
     const devices = JSON.parse(await getDevices());
     const session = await getSession(devices);
     await initDevice(session);
+    await release(session);
 })();
