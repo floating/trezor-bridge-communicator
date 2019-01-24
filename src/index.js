@@ -197,10 +197,10 @@ const initDevice = async session => new Promise(((resolve, reject) => {
     const { path, session, debugSession } = devices[0];
 
     // acquire device
-    const acquiredDevice = await acquire(path, session, false);
+    const acquiredDevice = await acquire(path, session);
 
     // acquire debug session
-    const acquiredDebugDevice = await acquireDebug(path, debugSession, true);
+    const acquiredDebugDevice = await acquireDebug(path, debugSession);
 
     // load device with all seed
     await initDevice(acquiredDevice.session);
