@@ -36,8 +36,9 @@ const getDevices = async () => new Promise(((resolve, reject) => {
     });
 }));
 
-const acquire = async path => new Promise(((resolve, reject) => {
-    request.post(`http://127.0.0.1:21325/acquire/${path}`, {
+const acquire = async (path, previousSession, isDebug) => new Promise(((resolve, reject) => {
+    const urlPart = isDebug ? 'debug/' : '';
+    request.post(`http://127.0.0.1:21325/${urlPart}acquire/${path}/${previousSession}`, {
         headers: {
             Origin: 'https://wallet.trezor.io',
         },
@@ -45,8 +46,7 @@ const acquire = async path => new Promise(((resolve, reject) => {
         if (error) {
             reject(error);
         } else {
-            console.log('aaa');
-            resolve(res.toJSON().body);
+            resolve(JSON.parse(res.toJSON().body));
         }
     });
 }));
@@ -65,21 +65,6 @@ const release = async session => new Promise(((resolve, reject) => {
     });
 }));
 
-const getSession = async (devices) => {
-    let result;
-    if (devices.length <= 0) {
-        throw Error('No connected devices');
-    }
-    if (!devices[0].session) {
-        console.log('acquirung');
-        result = await acquire(devices[0].path).session;
-    } else {
-        result = devices[0].session;
-    }
-    console.log('result', result);
-    return result;
-};
-
 const compose = (buf, type) => {
     const header = Buffer.alloc(6);
     header.writeUInt16BE(type, 0);
@@ -89,7 +74,24 @@ const compose = (buf, type) => {
 };
 
 const callHex = async (session, hex) => new Promise(((resolve, reject) => {
+    console.log('calling hex', hex, 'with sesion', session);
     request.post(`http://127.0.0.1:21325/call/${session}`, {
+        body: hex,
+        headers: {
+            Origin: 'https://wallet.trezor.io',
+        },
+    }, (error, res) => {
+        if (error) {
+            reject(error);
+        } else {
+            resolve(res.toJSON().body);
+        }
+    });
+}));
+
+const postHex = async (session, hex) => new Promise(((resolve, reject) => {
+    console.log('calling post', hex, 'with sesion', session);
+    request.post(`http://127.0.0.1:21325/post/${session}`, {
         body: hex,
         headers: {
             Origin: 'https://wallet.trezor.io',
@@ -120,7 +122,7 @@ const initDevice = async session => new Promise(((resolve, reject) => {
             reject(error);
         } else {
             await callHex(session, ACTIONS.BUTTON_ACK);
-            await callHex(session, ACTIONS.BUTTON_YES);
+            await postHex(session, ACTIONS.CONFIRM);
             resolve(res.toJSON().body);
         }
     });
@@ -128,8 +130,16 @@ const initDevice = async session => new Promise(((resolve, reject) => {
 
 (async () => {
     await isBridgeConnected();
+
     const devices = JSON.parse(await getDevices());
-    const session = await getSession(devices);
-    await initDevice(session);
-    await release(session);
+    console.log('devices', devices);
+    if (devices.length <= 0) {
+        throw Error('No connected devices');
+    }
+
+    const { path, session } = devices[0];
+    const acquiredDevice = await acquire(path, session, false);
+    console.log('acquiredDevice', acquiredDevice);
+    // await initDevice(session);
+    // await release(session);
 })();
