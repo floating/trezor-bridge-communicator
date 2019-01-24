@@ -7,7 +7,7 @@ const TYPES = {
 };
 
 const ACTIONS = {
-    BUTTON_ACK: '001b00000000',
+    ACK: '001b00000000',
     CONFIRM: '0064000000020801',
 };
 
@@ -36,9 +36,23 @@ const getDevices = async () => new Promise(((resolve, reject) => {
     });
 }));
 
-const acquire = async (path, previousSession, isDebug) => new Promise(((resolve, reject) => {
-    const urlPart = isDebug ? 'debug/' : '';
-    request.post(`http://127.0.0.1:21325/${urlPart}acquire/${path}/${previousSession}`, {
+const acquire = async (path, previousSession) => new Promise(((resolve, reject) => {
+    request.post(`http://127.0.0.1:21325/acquire/${path}/${previousSession}`, {
+        headers: {
+            Origin: 'https://wallet.trezor.io',
+        },
+    }, (error, res) => {
+        if (error) {
+            reject(error);
+        } else {
+            resolve(JSON.parse(res.toJSON().body));
+        }
+    });
+}));
+
+
+const acquireDebug = async (path, previousSession) => new Promise(((resolve, reject) => {
+    request.post(`http://127.0.0.1:21325/debug/acquire/${path}/${previousSession}`, {
         headers: {
             Origin: 'https://wallet.trezor.io',
         },
@@ -89,9 +103,9 @@ const callHex = async (session, hex) => new Promise(((resolve, reject) => {
     });
 }));
 
-const postHex = async (session, hex) => new Promise(((resolve, reject) => {
+const postHexDebug = async (session, hex) => new Promise(((resolve, reject) => {
     console.log('calling post', hex, 'with sesion', session);
-    request.post(`http://127.0.0.1:21325/post/${session}`, {
+    request.post(`http://127.0.0.1:21325/debug/post/${session}`, {
         body: hex,
         headers: {
             Origin: 'https://wallet.trezor.io',
@@ -121,8 +135,6 @@ const initDevice = async session => new Promise(((resolve, reject) => {
         if (error) {
             reject(error);
         } else {
-            await callHex(session, ACTIONS.BUTTON_ACK);
-            await postHex(session, ACTIONS.CONFIRM);
             resolve(res.toJSON().body);
         }
     });
@@ -131,15 +143,24 @@ const initDevice = async session => new Promise(((resolve, reject) => {
 (async () => {
     await isBridgeConnected();
 
+    // get emulator device (first and only one)
     const devices = JSON.parse(await getDevices());
-    console.log('devices', devices);
     if (devices.length <= 0) {
         throw Error('No connected devices');
     }
 
-    const { path, session } = devices[0];
+    const { path, session, debugSession } = devices[0];
+
+    // acquire device
     const acquiredDevice = await acquire(path, session, false);
-    console.log('acquiredDevice', acquiredDevice);
-    // await initDevice(session);
-    // await release(session);
+
+    // acquire debug session
+    const acquiredDebugDevice = await acquireDebug(path, debugSession, true);
+
+    // load device with all seed
+    await initDevice(acquiredDevice.session);
+    await callHex(acquiredDevice.session, ACTIONS.ACK);
+
+    // response confirm on device
+    await postHexDebug(acquiredDebugDevice.session, ACTIONS.CONFIRM);
 })();
