@@ -1,7 +1,7 @@
 import request from 'request';
 import debug from 'debug';
 import protobufjs from 'protobufjs';
-import messages from 'constants/messages.json';
+import messages from 'messages.json';
 import { compose } from 'message';
 import constants from 'constants';
 

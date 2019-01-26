@@ -1,23 +1,21 @@
 {
   "name": "trezor-bridge-communicator",
-  "version": "1.0.5",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/trezor/trezor-rollout.git"
+    "url": "https://github.com/vladimirvolek/trezor-bridge-communicator.git"
   },
-  "author": "Trezor <info@trezor.io>",
+  "author": "Vladimir Volek",
   "keywords": [
     "Trezor",
-    "trezor-rollout",
+    "trezor-bridge",
     "javascript"
   ],
   "license": "SEE LICENSE IN LICENSE.md",
-  "description": "Small javascript library to get latest safe firmware version for trezor update.",
-  "main": "lib/trezor-rollout.js",
+  "description": "",
+  "main": "lib/index.js",
   "scripts": {
     "dev": "nodemon --exec babel-node src/index.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
     "lint": "eslint .",
     "clean": "rimraf lib",
     "build": "yarn run clean && npx rollup -c rollup.config.js"
@@ -53,6 +51,7 @@
     "rollup": "^0.67.4",
     "rollup-plugin-babel": "^4.0.3",
     "rollup-plugin-cleanup": "^3.0.0",
+    "rollup-plugin-json": "^3.1.0",
     "yarn": "^1.12.3"
   }
 }

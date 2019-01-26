@@ -27,37 +27,43 @@ const getDevices = async () => new Promise(((resolve, reject) => {
 }));
 
 const initSeedAllDevice = async () => {
-    await isBridgeConnected();
+    try {
+        await isBridgeConnected();
 
-    // get emulator device (first and only one)
-    const devices = JSON.parse(await getDevices());
-    if (devices.length <= 0) {
-        throw Error('No connected devices');
+        // get emulator device (first and only one)
+        const devices = JSON.parse(await getDevices());
+        if (devices.length <= 0) {
+            throw Error('No connected devices');
+        }
+
+        const { path, session, debugSession } = devices[0];
+
+        // acquire device
+        const acquiredDevice = await acquire(path, session);
+
+        // acquire debug session
+        const acquiredDebugDevice = await acquireDebug(path, debugSession);
+
+        // load device with all seed
+        await loadDevice(acquiredDevice.session);
+
+        await callHex(acquiredDevice.session, constants.ACTIONS.ACK);
+
+        // response confirm on device
+        await postHexDebug(acquiredDebugDevice.session, constants.ACTIONS.CONFIRM);
+
+        // release sessions
+        await release(acquiredDevice.session);
+        await releaseDebug(acquiredDebugDevice.session);
+    } catch (err) {
+        console.error(err);
     }
-
-    const { path, session, debugSession } = devices[0];
-
-    // acquire device
-    const acquiredDevice = await acquire(path, session);
-
-    // acquire debug session
-    const acquiredDebugDevice = await acquireDebug(path, debugSession);
-
-    // load device with all seed
-    await loadDevice(acquiredDevice.session);
-    await callHex(acquiredDevice.session, constants.ACTIONS.ACK);
-
-    // response confirm on device
-    await postHexDebug(acquiredDebugDevice.session, constants.ACTIONS.CONFIRM);
-
-    // release sessions
-    await release(acquiredDevice.session);
-    await releaseDebug(acquiredDebugDevice.session);
 };
 
-(async () => {
-    await initSeedAllDevice();
-})();
+// test with device
+// (async () => {
+//     await initSeedAllDevice();
+// })();
 
 export {
     initSeedAllDevice,
