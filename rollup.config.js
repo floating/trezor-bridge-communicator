@@ -3,9 +3,9 @@ import babel from 'rollup-plugin-babel';
 import cleanup from 'rollup-plugin-cleanup';
 
 export default {
-    input: 'src/main.js',
+    input: 'src/index.js',
     output: {
-        file: 'lib/trezor-rollout.js',
+        file: 'lib/trezor-bridge-communicator.js',
         format: 'cjs',
     },
     plugins: [
