@@ -12,10 +12,10 @@
     "javascript"
   ],
   "license": "SEE LICENSE IN LICENSE.md",
-  "description": "",
+  "description": "soon",
   "main": "lib/index.js",
   "scripts": {
-    "dev": "nodemon --exec babel-node src/index.js",
+    "dev": "babel-node src/index.js",
     "lint": "eslint .",
     "clean": "rimraf lib",
     "build": "yarn run clean && npx rollup -c rollup.config.js"

@@ -47,10 +47,8 @@ const initSeedAllDevice = async () => {
         // load device with all seed
         await loadDevice(acquiredDevice.session);
 
-        await callHex(acquiredDevice.session, constants.ACTIONS.ACK);
-
-        // response confirm on device
         await postHexDebug(acquiredDebugDevice.session, constants.ACTIONS.CONFIRM);
+        await callHex(acquiredDevice.session, constants.ACTIONS.ACK);
 
         // release sessions
         await release(acquiredDevice.session);
